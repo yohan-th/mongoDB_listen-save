@@ -1,0 +1,101 @@
+# script de simulation cycle long
+
+###############################
+# configuration du simulateur #
+###############################
+# position initiale des moules, MLTA MLTB IMM MSS PHS
+MOLD 3 4 0 2 1
+# config IMM, temps fermeture, temps moulage, temps ouverture, temps ouvert
+IMM 1 1 1 1
+# config robot, temps dechargement, temps controle, temps evacuation
+ROBOT 1 2 2
+# intervalle de temps entre les sous etapes
+DELAY 0
+# temperature ambiante
+AMBIANTE 25
+
+# Temperature chauffe moules 1, en 20s
+# hausse lineaire cote MPL
+TEMPERATURE 1 MPL 20 75
+# hause en 4 paliers cote FPL
+TEMPERATURE 1 FPL 5 30 50 80 100
+
+# Temperature chauffe moules 2, en 20s
+# hausse lineaire cote MPL
+TEMPERATURE 2 MPL 25 75
+# hause en 4 paliers cote FPL
+TEMPERATURE 2 FPL 5 30 55 90 110
+
+# Temperature chauffe moules 3, en 20s
+# hause en 4 paliers
+TEMPERATURE 3 ALL 5 30 50 70 90
+
+# Temperature chauffe moules 4, en 25s
+# hause en 4 paliers
+TEMPERATURE 4 ALL 5 30 45 65 75
+# mise en chauffe
+HEAT
+
+#########################################################
+# etapes de mouvement des moules			#
+# n etp arg						#
+# 	n : delai avant l'execution de l'etape		#
+#	etp : etape					#
+#	arg : arguments, temps d'execution de l'etape	#
+#########################################################
+# moule actif en position B sur MLT (moule qui sera decharge dans IMM)
+0 MLT_POS B
+#deplacement MMT en 3s 
+2 MLT_TO_IMM 3
+# premier chargement moule IMM
+1 MLT_LD_IMM
+# MLT changement de la position active de MLT A <> B
+0 MLT_OTHER_POS
+#definition du delai entre les sous etapes
+DELAY 2
+
+#########################################
+# repete 8 fois les lignes jusqu'a END	#
+# en 4 repetitions, tous les moules ont	#
+# tourne sur toutes les stations	#
+#########################################
+REPEAT 8
+# MLT quite sa position
+0 MLT_MV
+# fermeture et bridage IMM
+1 IMM_CLOSE
+1 IMM_CLAMP
+# demarrage cycles IMM/ROBOT
+RUN
+# deplacement MLT vers MSS en 5s
+2 MLT_TO_MSS 5
+1 MSS_UNCLAMP
+# echange moules dans MSS <=>  MLT_UNLD_MSS + MLT_OTHER_POS + MLT_LD_MSS
+2 MLT_EXC_MSS
+0 MLT_MV
+1 MSS_CLAMP
+0 MLT_TO_PHS 1
+# echange moules dans PHS, implique la fin de la chauffe
+2 MLT_EXC_PHS
+0 MLT_MV
+# demarrage du cycle de chauffe PHS
+HEAT
+# deplacement MLT vers IMM en 5s
+1 MLT_TO_IMM 5
+# arret cycles IMM/ROBOT
+STOP
+1 IMM_UNCLAMP
+1 IMM_OPEN
+#1 MLT_EXC_IMM
+1 MLT_UNLD_IMM
+3 MLT_OTHER_POS
+1 MLT_LD_IMM
+#########################################
+# repete les lignes depuis REPEAT    	#
+#########################################
+END
+
+# fin chauffe
+HEAT 0
+# retour au debut
+1 MLT_TO_INIT 5

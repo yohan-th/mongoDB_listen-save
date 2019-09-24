@@ -1,0 +1,2 @@
+#! /bin/sh
+ find . -name staubli\* -size 0 -amin +30 -exec rm {} \;
